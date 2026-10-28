@@ -1,6 +1,6 @@
 ---
 title: "Problem Set 08"
-author: "Your Name"
+author: "KaBria Ross"
 date: last-modified
 date-format: "[Last modified on] MMMM DD, YYYY HH:mm:ss zzz"
 format: 
@@ -99,7 +99,7 @@ How many rows does `boot_samp_1000` have? **Why?**
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 1 Answers"}
-* Delete this and put your text answer here.
+* `boot_samp_1000` has **100,000 rows** because there are 1,000 bootstrap resamples, and each resample contains 100 observations.
 :::
 
 ## Step 2: Calculate the Bootstrap Statistic
@@ -174,7 +174,7 @@ How many values of the bootstrap statistic `stat` are there in the object `boot_
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 2 Answers"}
-* Delete this and put your text answer here.
+* There are **1,000 bootstrap statistics** in `boot_distrib_tv`. Each statistic represents the mean TV hours from one bootstrap resample. Since we created 1,000 resamples, we calculate 1,000 sample means.
 :::
 
 ## Visualizing the Bootstrap Distribution
@@ -335,11 +335,23 @@ boot_dist_tv_infer |> visualize() +
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 3 Answers"}
-* Delete this and put your text answer here.
+* **900** of the 1,000 `tv_mean` will fall between `lower_ci` and `upper_ci`.
 
 ```{r}
 # Type your code and comments below
+ci90 <- boot_dist_tv_infer |>
+  summarize(
+    lower_ci = quantile(stat, 0.05),
+    upper_ci = quantile(stat, 0.95)
+  )
 
+boot_dist_tv_infer |>
+  summarize(
+    count = sum(
+      stat >= ci90$lower_ci &
+      stat <= ci90$upper_ci
+    )
+  )
 ```
 :::
 
@@ -350,10 +362,16 @@ Use the bootstrap resampling distribution for `tvhours` generated using the infe
 ::: {.callout-important icon="false" collapse="false" title="Problem 4 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
+ci99_tv <- boot_dist_tv_infer |>
+  summarize(
+    lower_ci = quantile(stat, 0.005),
+    upper_ci = quantile(stat, 0.995)
+  )
 
+ci99_tv
 ```
 
-* Delete this and put your text answer here.
+* The 99% bootstrap percentile confidence interval for `tvhours` is **2.30 to 4.19 hours**.
 :::
 
 ::: {.callout-note icon="false" title="Problem 5"}
@@ -361,7 +379,7 @@ Which confidence interval is **WIDER**: the 95% confidence interval or the 99% c
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 5 Answers"}
-* Delete this and put your text answer here.
+* The ***99% confidence interval is wider*** than the 95% confidence interval because it must capture a larger percentage of the bootstrap distribution.
 :::
 
 ::: {.callout-note icon="false" title="Problem 6"}
