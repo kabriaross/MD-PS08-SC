@@ -391,7 +391,25 @@ Which confidence interval is **WIDER**: the 95% confidence interval or the 99% c
 ::: {.callout-important icon="false" collapse="false" title="Problem 6 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
+set.seed(21)
 
+boot_samp_age <- gss_sample |>
+  rep_sample_n(
+    size = nrow(gss_sample),
+    reps = 1000,
+    replace = TRUE
+  )
+
+boot_dist_age1 <- boot_samp_age |>
+  group_by(replicate) |>
+  summarize(stat = mean(age, na.rm = TRUE))
+
+set.seed(21)
+
+boot_dist_age2 <- gss_sample |>
+  specify(response = age) |>
+  generate(reps = 1000, type = "bootstrap") |>
+  calculate(stat = "mean")
 ```
 :::
 
@@ -402,12 +420,32 @@ Calculate 95% confidence intervals for the population mean respondent `age` $\mu
 ::: {.callout-important icon="false" collapse="false" title="Problem 7 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
+age_mean <- mean(gss_sample$age, na.rm = TRUE)
 
+# Using boot_dist_age1
+ci_age1_se <- boot_dist_age1 |>
+  summarize(
+    se = sd(stat),
+    lower_ci = age_mean - qnorm(0.975) * se,
+    upper_ci = age_mean + qnorm(0.975) * se
+  )
+
+ci_age1_se
+
+# Using boot_dist_age2
+ci_age2_se <- boot_dist_age2 |>
+  summarize(
+    se = sd(stat),
+    lower_ci = age_mean - qnorm(0.975) * se,
+    upper_ci = age_mean + qnorm(0.975) * se
+  )
+
+ci_age2_se
 ```
 
-* Delete this and put your text answer here.
+* For `boot_dist_age1`, the 95% CI for `age` using the 95% rule method is **44.30**.
 
-* Delete this and put your text answer here.
+* For `boot_dist_age2`, the 95% CI for `age` using the 95% rule method is **50.92**.
 :::
 
 ::: {.callout-note icon="false" title="Problem 8"}
@@ -417,10 +455,16 @@ Calculate a 95% bootstrap percentile confidence interval for the population mean
 ::: {.callout-important icon="false" collapse="false" title="Problem 8 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
+ci_age_percentile <- boot_dist_age1 |>
+  summarize(
+    lower_ci = quantile(stat, 0.025),
+    upper_ci = quantile(stat, 0.975)
+  )
 
+ci_age_percentile
 ```
 
-* Delete this and put your text answer here.
+* The 95% bootstrap percentile CI for `age` using values in `boot_dist_age1` is **44.059**.
 :::
 
 ::: {.callout-note icon="false" title="Problem 9"}
@@ -428,7 +472,7 @@ How do the 95% confidence intervals you calculated in 7 and 8 compare? i.e. are 
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 9 Answers"}
-* Delete this and put your text answer here.
+* The confidence intervals are similar because both estimate the population mean age using a 95% confidence level. However, they slightly differ because the 95% rule uses the standard error and a normal-distribution approximation, while the percentile method uses the actual quantiles of the bootstrap distribution.
 :::
 
 ::: {.callout-note icon="false" title="Problem 10"}
@@ -438,10 +482,16 @@ Use the **bootstrap resampling distribution** for the sample mean respondent `ag
 ::: {.callout-important icon="false" collapse="false" title="Problem 10 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
+ci_age80 <- boot_dist_age1 |>
+  summarize(
+    lower_ci = quantile(stat, 0.10),
+    upper_ci = quantile(stat, 0.90)
+  )
 
+ci_age80
 ```
 
-* Delete this and put your text answer here.
+* The 80% bootstrap percentile CI for the population mean respondent `age` is **45.44 to 49.70 years**.
 :::
 
 # Bootstrap Sampling Distribution & Confidence Intervals with Categorical Variables
@@ -536,33 +586,66 @@ Calculate a 95% CI for the **population proportion** of respondents $p$ who iden
 ::: {.callout-important icon="false" collapse="false" title="Problem 11 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+boot_dist_white1 <- boot_samp_1000 |>
+  group_by(replicate) |>
+  summarize(
+    boot_stat = mean(race == "White")
+  )
 ```
 
 ```{r}
 # Type your code and comments inside the code chunk
 # percentile method
+ci_white1_percentile <- boot_dist_white1 |>
+  summarize(
+    lower_ci = quantile(boot_stat, 0.025),
+    upper_ci = quantile(boot_stat, 0.975)
+  )
 
+ci_white1_percentile
 # 95% rule
+phat_white <- mean(gss_sample$race == "White")
 
+ci_white1_se <- boot_dist_white1 |>
+  summarize(
+    se = sd(boot_stat),
+    lower_ci = phat_white - qnorm(0.975) * se,
+    upper_ci = phat_white + qnorm(0.975) * se
+  )
+
+ci_white1_se
 ```
 
-* Delete this and put your text answer here.
+* The 95% CI for the population proportion of respondents who identified as `White` is **0.6774 to 0.8426**, or approximately **67.74% to 84.26%**. 
 
-* Delete this and put your text answer here.
+* The standard error is **0.04213543**.
 
 ```{r}
 # Type your code and comments inside the code chunk
+set.seed(43)
 
+boot_dist_white2 <- gss_sample |>
+  specify(response = race, success = "White") |>
+  generate(reps = 1000, type = "bootstrap") |>
+  calculate(stat = "prop")
 # percentile method
+ci_white2_percentile <- boot_dist_white2 |>
+  get_confidence_interval(
+    level = 0.95,
+    type = "percentile"
+  )
 
+ci_white2_percentile
 # 95% rule
-
+boot_dist_white2 |>
+  get_confidence_interval(
+    level = 0.95,
+    type = "se",
+    point_estimate = phat_white
+  )
 ```
 
-* Delete this and put your text answer here.
-
-* Delete this and put your text answer here.
+* The 95% CI for the population proportion of respondents who identified as `White`, using the **infer method** and the **95% rule**, is **0.6745 to 0.8455**, or approximately **67.45% to 84.55%**.
 :::
 
 # Confidence Intervals Based on the Theoretical Normal Distribution
@@ -611,9 +694,9 @@ When you are done, make sure all the `|` in the table still line up so your resu
 ::: {.callout-important icon="false" collapse="false" title="Problem 12 Answers"}
 | CI construction method          | lower value | upper value |
 |---------------------------------|-------------|-------------|
-| Using boostrap: 95% rule        | X           | Y           |
-| Using boostrap: percentile rule | A           | B           |
-| Using mathematical formula      | P           | Q           |
+| Using boostrap: 95% rule        | 2.43        | 3.85        |
+| Using boostrap: percentile rule | 2.48        | 3.92        |
+| Using mathematical formula      | 2.44        | 3.84        |
 :::
 
 ::: {.callout-note icon="false" title="Problem 13"}
@@ -621,7 +704,7 @@ When you are done, make sure all the `|` in the table still line up so your resu
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 13 Answers"}
-* Delete this and put your text answer here.
+* **Yes, I would say the three confidence intervals are similar** because they have close lower and upper endpoints. All three methods estimate the population mean TV hours to be within approximately 2.4 to 3.9 hours. The small differences occur because each method uses a slightly different approach to estimate the confidence interval.
 :::
 
 # Turning in Your Work
